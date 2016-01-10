@@ -1,0 +1,342 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>youtubeDemo</title>  
+        <SCRIPT src="library/youtubeAPI.js"></SCRIPT>
+        <SCRIPT src="library/jquery-2.1.4.js"></SCRIPT>     
+        <SCRIPT src="https://www.youtube.com/iframe_api"></SCRIPT>     
+       <!-- <LINK title="stylesheet" rel="stylesheet" href="youtubeAPI.css">-->
+       <style>
+            body
+            {
+                }
+            .unselectable,.unselectable *
+            {
+                    -webkit-touch-callout: none;
+                    -webkit-user-select: none;
+                    -khtml-user-select: none;
+                    -moz-user-select: none;
+                    -ms-user-select: none;
+                    user-select: none;                
+                }
+            #controlPanel img
+            {
+                height:40px;
+                }
+            #controlPanel img:hover, #playlist1 .sampleNode
+            {
+                cursor:pointer;
+                }
+            #controlPanel, #playlist1
+            {   /*making inner items display with equal interval*/
+                 display: -webkit-flex; /* Safari */
+                 -webkit-justify-content: space-around; /* Safari 6.1+ */
+                 display : flex;
+                 justify-content: space-around;    
+                    }
+            
+            #controlPanel>*
+            {
+                display:inline-block;
+                }
+           #settings
+           {
+               border-style:solid; 
+               position:absolute; 
+               height:80px; 
+               width:240px;
+               padding-top:1.5em;
+               bottom:40px;
+               right:0px;   
+               background-color:White;      
+               border-radius:20px;        
+               }
+          input[type=radio] + label:hover
+          {
+                background-color:rgb(200,200,200);
+              }
+          input[type=radio]:checked + label::before
+          {
+              content:"\2713\0020";
+              }
+          input[type=radio] + label::before
+          {
+              content:"\00a0 \00a0 \00a0 \00a0 ";
+              }
+              
+          canvas
+          {     /*prevent click highlight in mobile safari*/
+              -webkit-tap-highlight-color:rgba(0,0,0,0);
+              }
+        </style>
+    </head>
+
+   
+
+
+  <body class="unselectable" style="max-width:1280px; margin-right:auto; margin-left:auto;"> 
+<!--  <div id="test" style="">test  </div>-->
+        <div style="position:relative; margin-left:auto; margin-right:auto;  height:220px; margin-bottom:40px;">
+            <img src="image/handDrawn/progressbar.png" style="width:100%; height:30px;"/>
+            <div id="playlist1" style="position:absolute; top:0; width:100%; overflow-x:scroll; white-space:nowrap;">
+                <div class="sampleNode" style="display:inline-block; position:relative;">
+                    <img src="image/handDrawn/ThumbnailPaper.png" style="height:220px; display:block;"/>
+                    <div style="position:absolute; top:65px; left:15px; text-align:center;width:180px;">
+                        <div class="thumbnail" ></div>
+                        <span class="title" style="white-space:normal;"></span>
+                        <img class="nowPlaying" src="image/handDrawn/play.png"  style="width:35px; height:auto; position:absolute; top:30px; left:65px; display:none;"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div  style="margin-left:auto; margin-right:auto; max-width:700px;">       
+            <div style="width:640px; display:table-cell;">
+                <div id="videoCanvasWrapper" allowfullscreen="1" style="position:relative; ">
+                    <div id="video1" style="display:block;"></div>
+                    <!--<canvas id="video1Cover" width="640" height="360" style=" position:absolute; top:0; left:0; /*border:solid 8px red*/;"></canvas>-->
+                    <div id="progressBar" class="autoHieControlBar" style="position:absolute; bottom:0; width:100%;">
+                        <div class="hoverTimeBlock" style="display:none; position:absolute; top:-18px;">
+                            <img src="image/handDrawn/dialogBlock.png" style="height:1.5em; width:3em;"><span class="hoverTimeText" style="margin-left:-2.6em; position:relative; top:-0.5em;"></span>
+                        </div>
+                        <img src="image/handDrawn/progressbar.png" style="height:30px; width:100%;"/>
+                        <img class="handle" src="image/handDrawn/handle.png" style="height:30px; width:auto; position:absolute; top:0; left:0;"/>
+                    </div>
+                </div>
+                <div id="controlPanel" style="width:640px; position:relative;">
+                    <img id="previous" src="image/handDrawn/previous.png"/>
+                    <img id="play" src="image/handDrawn/play.png" />
+                    <img id="pause" src="image/handDrawn/pause.png" style="display:none;"/>
+                    <img id="next" src="image/handDrawn/next.png" />
+                    <div style="width:6em; font-size:1.2em; text-align:center;"><span id="timeText">0:00</span><span>/0:00</span></div>
+                    <img id="ccon" src="image/handDrawn/ccon.png" />
+                    <img id="ccoff" src="image/handDrawn/ccoff.png" style="display:none;"/>
+                    <img id="cog" src="image/handDrawn/cog.png" style="display:none;" />
+                    <img id="fullscreen" src="image/handDrawn/fullscreen.png" style="display:none;"/>
+                    <div id='settings' style="display:none; padding-left:1.5em;">
+                        <div style="font-size:0.9em;"><span style="vertical-align:top; font-size:1.2em;">Subtitle: </span>
+                        <div id="tracklistNow" style="display:inline-block; text-align:left; border:solid 1px black; background-color:White; width:164px; position:relative; "><span id="showLan" style="display:block;"> ▾ English</span>
+                        <div id='tracklist' style="display:none; max-height:8em; overflow-y:scroll; position:absolute; left:-1px; border:solid 1px black; border-top:none; background-color:White; width:100%; z-index:1;">
+                            <p class="sampleNode" style="margin:0 0 0 0;"><input type="radio" style="display:none;"><label style="line-height:100%; display:none;" class="nameSpan"></label></p>
+                        </div></div></div>
+                        <br>
+                        <div style="font-size:0.9em;"><span style="vertical-align:top; font-size:1.2em;">Speed: </span>
+                        <div id="ratelistNow" style="display:inline-block; text-align:left; border:solid 1px black; background-color:White; width:100px; position:relative; "><span id="showSpd" style="display:block;"> ▾ normal</span>
+                        <div id='ratelist' style="display:none; max-height:8em; overflow-y:scroll; position:absolute; left:-1px; border:solid 1px black; border-top:none; background-color:White; width:100%; z-index:1;">
+                            <p class="sampleNode" style="margin:0 0 0 0;"><input type="radio" style="display:none;"><label style="line-height:100%; display:none;" class="nameSpan"></label></p>
+                        </div></div></div>
+                    </div>
+                </div>
+                <div id="captionTutorial" style="display:none; position:relative; left:430px; top:-10px;"><img src="image/handDrawn/redArrowLeft.png" style="width:200px;"/> <span style="color:Red; font-size:1.5em;">Try caption on/off</span></div>
+                <div id="lanTutorial" style="display:none; position:relative; left:520px; top:-10px;"><img src="image/handDrawn/redArrowLeft.png" style="width:200px;"/> <span style="color:Red; font-size:1.5em;">And select languages</span></div>
+                <div id="charName" style="display:none; font-size:5em; font-style:italic; font-weight:900;"></div>       
+            </div>
+            <div style="display:table-cell; ">
+                <div style="margin-left:20px; text-align:center;">
+                <div id="volumeBar1" style="display:inline-block; position:relative;">
+                     <img src="image/handDrawn/volumeBar.png" style="width:30px; height:200px;"/>
+                     <img class="handle" src="image/handDrawn/volumeHandle.png" style="width:30px; position:absolute; left:0; bottom:0;" />
+                </div>
+                <img id="sound" src="image/handDrawn/Sound.png" style="width:40px;" /><img id="soundOff" src="image/handDrawn/SoundOff.png" style="width:40px; display:none;" />
+                </div>
+            </div>
+        </div>
+
+        <!--<input id="testButton" type=button value="test"/>-->
+    <script>
+
+        function onYouTubeIframeAPIReady() {
+
+            var playList = ['H_8y0WLm78U','diU70KshcjA', 'GcwR7KbMGdE', 'uDeXe9OwhxU'];
+            //var playList = 'PLiatqssGebieEqJ_Nx5FQ1CUDe-fybMOw';
+                var player1 = new YT.Player('video1', {//properties here are before onStateChange event
+                    videoId: playList[0],
+                    height: '360', 
+                    width: '640',
+                    playerVars: {
+                        'autoplay': 0, //only valid for the first video                        
+                        'controls': 0,
+                        'rel': 0,
+                        'showinfo': 0, //takes 30px on he top of video
+                        'modestbranding': 0,
+                        'autohide': 1,
+                        'cc_load_policy': 1,
+                        'playlist': playList.slice(1).toString(), //will be played after param "videoId"
+                        //'list': playList,
+                        'suggestedQuality': 'default'
+                    },
+                    events: {
+                        //'onReady': onPlayerReady
+                       // 'onStateChange': onPlayerStateChange
+                    }
+                });
+
+                //make images undraggable
+                $(document).on("dragstart", function (event) {
+                    if (event.target.nodeName.toUpperCase() == "IMG") {
+                        return false;
+                    }
+                });
+                var imgs = document.getElementsByTagName("img");
+                for (var i = 0, j = imgs.length; i < j; i++) {
+                        imgs[i].setAttribute("draggable", "false");
+                    }
+                    player1.addEventListener("onReady", function (event) { onPlayerReady(event, playList) });
+
+            }
+            function onPlayerReady(event, playList) {
+                var player1 = event.target;
+
+                //set html elements as variable named by its id
+                var v = setElemVariables();
+
+                //icon change when play/pause
+                //go to time zero when video change
+                player1.addEventListener("onStateChange", change);
+                function change(event) {
+                    if (event.data === -1) { 
+                        player1.seekTo(0, true); //in IE, it won't get to 0 when change video by default
+                    } 
+                    if (event.data === 1) {
+                        v.play.style.display = 'none';
+                        v.pause.style.display = 'inline-block';
+                    }
+                    if (event.data !==1 && event.data!==3) {
+                        v.play.style.display = 'inline-block';
+                        v.pause.style.display = 'none';
+                    }
+                }
+
+                //show/hide time bar
+                var timerHide;
+                autoHide(player1,timerHide,v.progressBar, {
+                    show: function () { $('#progressBar').fadeIn('fast', 'swing', function () { v.progressBar.style.display = 'block'; }); },
+                    hide: function () { $('#progressBar').fadeOut('fast', 'swing', function () { v.progressBar.style.display = 'none'; }); }
+                });
+                
+                //set up play list
+                setUpPlaylist({
+                    player: player1,
+                    //playlistId: 'PLiatqssGebieEqJ_Nx5FQ1CUDe-fybMOw', //Use playlistId, Max 50 items
+                    playlistId: playList, //use array
+                    div: v.playlist1,
+                    actionClick: click,
+                    styleNowPlaying: function (event, item) { item.getElementsByClassName('nowPlaying')[0].style.display = "block"; }, //:displayNowPlaying(event,nowPlayingDiv)
+                    styleNotPlaying: function (event, item) { item.getElementsByClassName('nowPlaying')[0].style.display = "none"; } //:displayNotPlaying(event,notPlayingDiv)
+                    //actionEnter: function (event, index, itemDiv) {itemDiv.style.color="red" }, //enter(event, videoId)
+                    //actionLeave:leave,//leave(event, index, itemDiv)
+                });
+
+                //click on playlist
+                function click(event, index, itemDiv) {
+                    var cNames = itemDiv.className.split(" ");
+                    var videoid = cNames[cNames.length - 1];
+                    if (player1.getPlaylist() != null && player1.getPlaylist()[index] === videoid) { player1.playVideoAt(index); player1.seekTo(0, true); }
+                    else { loadPlaylist(player1, playList, index); }
+                }
+                VideoCoverStyling_wrapper(v.videoCanvasWrapper, player1);
+                
+                //set up volume bar
+                volumeBarSetUp(player1, v.volumeBar1,'y');
+                
+                //set up progress bar
+                progressBarAndTimeSpanSetUp(player1, v.progressBar, v.timeText);
+
+                //play/pause button
+                v.play.onclick = function () { player1.playVideo(); };
+                v.pause.onclick = function () { player1.pauseVideo(); };
+
+                //mute button
+                if (player1.isMuted() === true) { v.sound.style.display = "none"; v.soundOff.style.display = "inline-block"; }
+                else { v.soundOff.style.display = "none"; v.sound.style.display = "inline-block"; }
+                v.sound.onclick = function () { player1.mute(); v.sound.style.display = "none"; v.soundOff.style.display = "inline-block"; };
+                v.soundOff.onclick = function () { player1.unMute(); v.soundOff.style.display = "none"; v.sound.style.display = "inline-block"; };
+
+                //cc button
+                v.ccon.onclick = function () { ccoff(player1); v.ccon.style.display = "none"; v.ccoff.style.display = "inline-block"; };
+                v.ccoff.onclick = function () { ccon(player1,v.tracklist); v.ccon.style.display = "inline-block"; v.ccoff.style.display = "none"; };
+
+                //nex/pre button
+                v.previous.onclick = function () {
+                    player1.previousVideo(); //in IE, time will not be setto zero
+                };
+                v.next.onclick = function () { player1.nextVideo(); };
+
+                //fullscreen
+                if (document.exitFullscreen || document.msExitFullscreen || document.mozCancelFullScreen || document.webkitExitFullscreen) {
+                    fullScreenWithCoverSetUp(player1, v.videoCanvasWrapper);
+                    v.fullscreen.onclick = function () { fullScreen(v.videoCanvasWrapper); };
+                    v.fullscreen.style.display = "inline-block";
+                }
+
+                //language menu
+                var lan = window.navigator.userLanguage || window.navigator.language;
+                setListForVideoSync(player1, v.ratelist, 1,
+                {
+                    actionSetUp: getSpeed,
+                    actionChange: function (player, value) { player.setPlaybackRate(value); v.showSpd.innerHTML = " ▾ " + document.getElementById("ratelist_" + value).nextElementSibling.innerHTML; },
+                    actionNull: function () { v.ratelistNow.parentNode.style.display = "none"; v.cog.style.display = "none"; },
+                    actionExist: function () { v.ratelistNow.parentNode.style.display = "block"; v.cog.style.display = "inline-block"; }
+                });
+                setListForVideoAsync(player1, v.tracklist, 'en',
+                {
+                    actionSetUp: function (player, wrap) { getTrack(player, wrap); },
+                    actionChange: function (player, value) {
+                        player.setOption("captions", "track", { "languageCode": value });
+                        player.setOption("cc", "track", { "languageCode": value });
+                        v.showLan.innerHTML = " ▾ " + document.getElementById("tracklist_" + value).nextElementSibling.innerHTML;
+                        v.tracklist.style.display = "none";
+                    },
+                    actionNull: function () { v.tracklistNow.parentNode.style.display = "none"; },
+                    actionExist: function () { v.tracklistNow.parentNode.style.display = "block"; v.cog.style.display = "inline-block"; }
+                });
+
+                //speed menu
+                function getSpeed(player) {
+                    var speed = player.getAvailablePlaybackRates();
+                    var name = new Array();
+                    for (var i = 0; i < speed.length; i++) {
+                        name.push(speed[i].toString());
+                        if (speed[i] == 1) name[i] = "normal";
+                    }
+                    return { value: speed, name: name };
+                }
+
+                //cog button
+                v.cog.onclick = function (event) {
+                    if (v.settings.style.display === "none") { v.settings.style.display = "block"; event.stopPropagation(); }
+                    else {
+                        v.settings.style.display = "none";
+                        v.tracklist.style.display = "none";
+                        v.ratelist.style.display = "none";
+                    }
+                };
+                document.addEventListener("click", function () { v.settings.style.display = "none"; v.tracklist.style.display = "none"; v.ratelist.style.display = "none"; });
+                v.settings.addEventListener('click', function (event) { v.tracklist.style.display = "none"; v.ratelist.style.display = "none"; event.stopPropagation(); });
+                v.showLan.addEventListener('click', showlist);
+                v.showSpd.addEventListener('click', showlist);
+                function showlist(event) {
+                    var list = event.target.parentNode.getElementsByTagName('div')[0];
+                    if (list.style.display === 'none'){
+                        list.style.display = "block";
+                    }
+                    else list.style.display = "none";
+                    if (list.id === 'tracklist') v.ratelist.style.display = 'none';
+                    else v.tracklist.style.display = 'none';
+                    event.stopPropagation();
+                }
+               
+                // event on certain time of the video
+                //var timers1 = []; //one timer array for one player
+                //eventsGivenTime(player1, timers1, 'diU70KshcjA', [
+                //    { time: 0.5, funct: function () { $('#captionTutorial').fadeIn('slow', 'swing'); setTimeout(function () {$('#captionTutorial').fadeOut('slow', 'swing'); }, 2500); } },
+                //    { time: 4, funct: function () { $('#lanTutorial').fadeIn('slow', 'swing'); setTimeout(function () { $('#lanTutorial').fadeOut('slow', 'swing'); }, 2500); } },
+                //    { time: 19, funct: function () { v.charName.innerHTML = "ARIAL"; v.charName.style.color = "green"; $('#charName').fadeIn('slow', 'swing'); } },
+                //    { time: 71, funct: function () { v.charName.innerHTML = "JASMINE"; v.charName.style.color = "blue"; $('#charName').fadeIn('slow', 'swing', function () { $('#charName').fadeOut('slow', 'swing'); }); } }
+                // ]);
+            }
+            
+    </script>
+
+  </body>
+</html>
